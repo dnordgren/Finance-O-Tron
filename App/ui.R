@@ -12,6 +12,7 @@ shinyUI(fluidPage(
   ),
   
   mainPanel(
-    # Output goes here
+    textOutput("symbols"),
+    plotOutput("plot")
   )
 ))
