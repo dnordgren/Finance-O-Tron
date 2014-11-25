@@ -1,5 +1,6 @@
 shinyServer(function(input, output, session){
   stocks <- data.frame(Symbol = character(), Start = character(), End = character(), stringsAsFactors = FALSE)
+  
   # Monitor "Clear Stocks" button presses
   observe({
     if(input$clear_stocks == 0){
@@ -9,13 +10,9 @@ shinyServer(function(input, output, session){
     output$symbols <- renderPrint({
       cat("Stocks: ")
     })
-    output$plot.ui <- renderUI({
-      plotOutput("plot")
-    })
-    output$plot <- renderPlot({
-      NULL
-    })
+    create_blank_plot_output(output)
   })
+  
   # Monitor "Add Stock" button presses
   observe({
     if (input$add_stock == 0){
@@ -33,15 +30,7 @@ shinyServer(function(input, output, session){
         cat(stocks$Symbol, sep=", ")
       })
       if (input$timeseries){
-        output$plot.ui <- renderUI({
-          plotOutput("plot", height = paste0(200*length(stocks$Symbol), "px"))
-        })
-        output$plot <- renderPlot({
-          withProgress(session, min = 0, max = 2, {
-            setProgress(message = "Creating plots", value = 1)
-            create_plot(stocks)
-          })
-        })
+        create_plot_output(input, output, session, stocks)
       }
     })
   })
@@ -51,21 +40,13 @@ shinyServer(function(input, output, session){
     if (input$apply_analysis == 0){
       return()
     }
-    if (input$timeseries){
-      output$plot.ui <- renderUI({
-        plotOutput("plot", height = paste0(200*length(stocks$Symbol), "px"))
-      })
-      output$plot <- renderPlot({
-        create_plot(stocks)
-      })
-    }
-    else{
-      output$plot.ui <- renderUI({
-        plotOutput("plot")
-      })
-      output$plot <- renderPlot({
-        NULL
-      })
-    }
+    isolate({
+      if (input$timeseries){
+        create_plot_output(input, output, session, stocks)
+      }
+      else{
+        create_blank_plot_output(output)
+      }
+    })
   })
 })
