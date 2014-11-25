@@ -17,6 +17,7 @@ create_plot_output <- function(input, output, session, stocks){
       output$error <- renderPrint({
         cat(tail(stocks, 1)$Symbol, "is not a valid ticker symbol")
       })
+      create_plot_output(input, output, session, head(stocks, -1))
       return(head(stocks, -1))
     }
     return(stocks)

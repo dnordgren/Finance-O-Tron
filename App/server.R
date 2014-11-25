@@ -19,6 +19,9 @@ shinyServer(function(input, output, session){
       return()
     }
     isolate({
+      output$error <- renderText({
+        NULL
+      })
       if(length(stocks$Symbol) == 0 || !(input$symbol %in% stocks$Symbol)){
         stock_row <- data.frame(Symbol = as.character(toupper(input$symbol)),
                                 Start = as.character(input$range[1]), End = as.character(input$range[2]),

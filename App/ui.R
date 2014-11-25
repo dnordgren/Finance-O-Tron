@@ -18,6 +18,7 @@ shinyUI(fluidPage(
   mainPanel(
     textOutput("symbols"),
     textOutput("error"),
+    tags$head(tags$style("#error{color: red;}")),
     uiOutput("plot.ui")
   )
 ))
