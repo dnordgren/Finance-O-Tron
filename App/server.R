@@ -1,4 +1,4 @@
-shinyServer(function(input, output){
+shinyServer(function(input, output, session){
   stocks <- data.frame(Symbol = character(), Start = character(), End = character(), stringsAsFactors = FALSE)
   # Monitor "Clear Stocks" button presses
   observe({
@@ -8,6 +8,9 @@ shinyServer(function(input, output){
     stocks <<- data.frame(Symbol = character(), Start = character(), End = character(), stringsAsFactors = FALSE)
     output$symbols <- renderPrint({
       cat("Stocks: ")
+    })
+    output$plot.ui <- renderUI({
+      plotOutput("plot")
     })
     output$plot <- renderPlot({
       NULL
@@ -20,7 +23,9 @@ shinyServer(function(input, output){
     }
     isolate({
       if(length(stocks$Symbol) == 0 || !(input$symbol %in% stocks$Symbol)){
-        stock_row <- data.frame(Symbol = as.character(toupper(input$symbol)), Start = as.character(input$range[1]), End = as.character(input$range[2]), stringsAsFactors = FALSE)
+        stock_row <- data.frame(Symbol = as.character(toupper(input$symbol)),
+                                Start = as.character(input$range[1]), End = as.character(input$range[2]),
+                                stringsAsFactors = FALSE)
         stocks <<- rbind(stocks, stock_row)
       }
       output$symbols <- renderPrint({
@@ -28,17 +33,39 @@ shinyServer(function(input, output){
         cat(stocks$Symbol, sep=", ")
       })
       if (input$timeseries){
-        output$plot <- renderPlot({
-          create_plot(stocks)
+        output$plot.ui <- renderUI({
+          plotOutput("plot", height = paste0(200*length(stocks$Symbol), "px"))
         })
-        # If they've selected timeseries, print the output
-        # Start date = as.character(input$range[1])
-        # End date = as.character(input$range[2])
-        # For now, could just loop through and get quandl data for each
-        # stock in list, create timeseries for each 'Adjusted Close' column
-        # and plot all timeseries on same graph. Would need to assume same
-        # start and end dates.
+        output$plot <- renderPlot({
+          withProgress(session, min = 0, max = 2, {
+            setProgress(message = "Creating plots", value = 1)
+            create_plot(stocks)
+          })
+        })
       }
     })
+  })
+  
+  # Monitor "Apply Analysis" button presses
+  observe({
+    if (input$apply_analysis == 0){
+      return()
+    }
+    if (input$timeseries){
+      output$plot.ui <- renderUI({
+        plotOutput("plot", height = paste0(200*length(stocks$Symbol), "px"))
+      })
+      output$plot <- renderPlot({
+        create_plot(stocks)
+      })
+    }
+    else{
+      output$plot.ui <- renderUI({
+        plotOutput("plot")
+      })
+      output$plot <- renderPlot({
+        NULL
+      })
+    }
   })
 })
