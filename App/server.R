@@ -1,6 +1,6 @@
 shinyServer(function(input, output, session){
   stocks <- data.frame(Symbol = character(), Start = character(), End = character(), stringsAsFactors = FALSE)
-  
+
   # Monitor "Clear Stocks" button presses
   observe({
     if(input$clear_stocks == 0){
@@ -12,7 +12,7 @@ shinyServer(function(input, output, session){
     })
     create_blank_plot_output(output)
   })
-  
+
   # Monitor "Add Stock" button presses
   observe({
     if (input$add_stock == 0){
@@ -36,8 +36,11 @@ shinyServer(function(input, output, session){
         stocks <<- create_plot_output(input, output, session, stocks)
       }
     })
+
+    # Clear input text box on button press
+    updateTextInput(session, "symbol", value = "")
   })
-  
+
   # Monitor "Apply Analysis" button presses
   observe({
     if (input$apply_analysis == 0){
