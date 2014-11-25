@@ -25,12 +25,14 @@ shinyServer(function(input, output, session){
                                 stringsAsFactors = FALSE)
         stocks <<- rbind(stocks, stock_row)
       }
+      print(stocks)
       output$symbols <- renderPrint({
         cat("Stocks: ")
         cat(stocks$Symbol, sep=", ")
       })
       if (input$timeseries){
-        create_plot_output(input, output, session, stocks)
+        stocks <<- create_plot_output(input, output, session, stocks)
+        print(stocks)
       }
     })
   })
@@ -42,7 +44,7 @@ shinyServer(function(input, output, session){
     }
     isolate({
       if (input$timeseries){
-        create_plot_output(input, output, session, stocks)
+        stocks <<- create_plot_output(input, output, session, stocks)
       }
       else{
         create_blank_plot_output(output)

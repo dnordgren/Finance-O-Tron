@@ -17,6 +17,7 @@ shinyUI(fluidPage(
   
   mainPanel(
     textOutput("symbols"),
+    textOutput("error"),
     uiOutput("plot.ui")
   )
 ))

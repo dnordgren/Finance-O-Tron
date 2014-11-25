@@ -1,17 +1,25 @@
 create_plot_output <- function(input, output, session, stocks){
   if(length(stocks$Symbol) == 0){
     create_blank_plot_output(output)
-    return()
+    return(stocks)
   }
   
   output$plot.ui <- renderUI({
     plotOutput("plot", height = paste0(200*length(stocks$Symbol), "px"))
   })
-  output$plot <- renderPlot({
-    withProgress(session, min = 0, max = 2, {
-      setProgress(message = "Creating plots", value = 1)
-      create_plot(stocks)
+  withProgress(session, min = 0, max = 2, {
+    setProgress(message = "Creating plots", value = 1)
+    plot <- create_plot(stocks)
+    output$plot <- renderPlot({
+      plot
     })
+    if(is.null(plot)){
+      output$error <- renderPrint({
+        cat(tail(stocks, 1)$Symbol, "is not a valid ticker symbol")
+      })
+      return(head(stocks, -1))
+    }
+    return(stocks)
   })
 }
 
