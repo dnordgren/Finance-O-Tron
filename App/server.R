@@ -13,7 +13,7 @@ shinyServer(function(input, output, session){
     output$symbols <- renderPrint({
       cat("Stocks: ")
     })
-    create_blank_plot_output(output)
+    create_blank_timeseries_plot_output(output)
   })
 
   # Monitor "Add Stock" button presses
@@ -37,12 +37,12 @@ shinyServer(function(input, output, session){
           }
           else{
             stocks <<- rbind(stocks, stock_row)
-            setProgress(message = "Creating plots", value = 2)
-            create_plot_output(input, output, session, stocks)
             output$symbols <- renderPrint({
               cat("Stocks: ")
               cat(stocks$Symbol, sep=", ")
             })
+            setProgress(message = "Creating plots", value = 2)
+            create_timeseries_plot_output(input, output, session, stocks)
           }
         }
       })

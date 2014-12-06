@@ -20,7 +20,7 @@ get_stock_data <- function(symbol, start, end){
                           stringsAsFactors = FALSE)
 }
 
-create_plot <- function(stocks){
+create_timeseries_plot <- function(stocks){
   stock_ts <- apply(stocks, 1, function(row)
   {
     data.frame(Symbol = row$Symbol, Prices = row$Prices, Date=row$Dates)
