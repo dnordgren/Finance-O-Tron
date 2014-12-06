@@ -1,12 +1,15 @@
 shinyServer(function(input, output, session){
-  stocks <- data.frame(Symbol = character(), Start = character(), End = character(), stringsAsFactors = FALSE)
+  stocks <- NULL
 
   # Monitor "Clear Stocks" button presses
   observe({
     if(input$clear_stocks == 0){
       return()
     }
-    stocks <<- data.frame(Symbol = character(), Start = character(), End = character(), stringsAsFactors = FALSE)
+    output$error <- renderText({
+      NULL
+    })
+    stocks <<- NULL
     output$symbols <- renderPrint({
       cat("Stocks: ")
     })
@@ -22,37 +25,30 @@ shinyServer(function(input, output, session){
       output$error <- renderText({
         NULL
       })
-      if(length(stocks$Symbol) == 0 || !(input$symbol %in% stocks$Symbol)){
-        stock_row <- data.frame(Symbol = as.character(toupper(input$symbol)),
-                                Start = as.character(input$range[1]), End = as.character(input$range[2]),
-                                stringsAsFactors = FALSE)
-        stocks <<- rbind(stocks, stock_row)
-      }
-      output$symbols <- renderPrint({
-        cat("Stocks: ")
-        cat(stocks$Symbol, sep=", ")
+      withProgress(session, min = 0, max = 2, {
+        if(length(stocks$Symbol) == 0 || !(input$symbol %in% stocks$Symbol)){
+          symbol <- as.character(toupper(input$symbol))
+          setProgress(message = "Getting data", value = 1)
+          stock_row <- get_stock_data(symbol, as.character(input$range[1]), as.character(input$range[2]))
+          if (is.null(stock_row)){
+            output$error <- renderPrint({
+              cat(symbol, "is not a valid ticker symbol")
+            })
+          }
+          else{
+            stocks <<- rbind(stocks, stock_row)
+            setProgress(message = "Creating plots", value = 2)
+            create_plot_output(input, output, session, stocks)
+            output$symbols <- renderPrint({
+              cat("Stocks: ")
+              cat(stocks$Symbol, sep=", ")
+            })
+          }
+        }
       })
-      if (input$timeseries){
-        stocks <<- create_plot_output(input, output, session, stocks)
-      }
     })
 
     # Clear input text box on button press
     updateTextInput(session, "symbol", value = "")
-  })
-
-  # Monitor "Apply Analysis" button presses
-  observe({
-    if (input$apply_analysis == 0){
-      return()
-    }
-    isolate({
-      if (input$timeseries){
-        stocks <<- create_plot_output(input, output, session, stocks)
-      }
-      else{
-        create_blank_plot_output(output)
-      }
-    })
   })
 })
