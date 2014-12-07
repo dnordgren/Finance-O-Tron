@@ -1,5 +1,10 @@
 shinyServer(function(input, output, session){
   stocks <- NULL
+  stock_data <- NULL
+  start <- NULL
+  end <- NULL
+  
+  get_market_data()
 
   # Monitor "Clear Stocks" button presses
   observe({
@@ -10,10 +15,14 @@ shinyServer(function(input, output, session){
       NULL
     })
     stocks <<- NULL
+    stock_data <<- NULL
+    start <<- NULL
+    end <<- NULL
+    enableInputSmall(session)
     output$symbols <- renderPrint({
       cat("Stocks: ")
     })
-    create_blank_plot_output(output)
+    create_blank_output(output)
   })
 
   # Monitor "Add Stock" button presses
@@ -25,24 +34,45 @@ shinyServer(function(input, output, session){
       output$error <- renderText({
         NULL
       })
-      withProgress(session, min = 0, max = 2, {
+      withProgress(session, min = 0, max = 3, {
+        if (is.null(start) || is.null(end)){
+          start <<- as.character(input$range[1])
+          end <<- as.character(input$range[2])
+          disableInputSmall(session)
+        }
         if(length(stocks$Symbol) == 0 || !(input$symbol %in% stocks$Symbol)){
           symbol <- as.character(toupper(input$symbol))
           setProgress(message = "Getting data", value = 1)
-          stock_row <- get_stock_data(symbol, as.character(input$range[1]), as.character(input$range[2]))
-          if (is.null(stock_row)){
+          return_dates <- FALSE
+          if (is.null(stock_data)){
+            return_dates <- TRUE
+          }
+          stock_column <- get_stock_data(symbol, start, end, return_dates)
+          if (is.null(stock_column)){
             output$error <- renderPrint({
               cat(symbol, "is not a valid ticker symbol")
             })
           }
           else{
-            stocks <<- rbind(stocks, stock_row)
-            setProgress(message = "Creating plots", value = 2)
-            create_plot_output(input, output, session, stocks)
+            if (is.null(stock_data)){
+              stock_data <<- stock_column
+            }
+            else{
+              if(length(stock_column[,1]) < length(stock_data$Date)){
+                stock_data <<- tail(stock_data, length(stock_column[,1]))
+                start <<- stock_data$Date[1]
+              }
+              stock_data <<- cbind(stock_data, stock_column)
+            }
+            stocks <<- rbind(stocks, data.frame(Symbol=symbol, Weight=input$weight, stringsAsFactors=FALSE))
             output$symbols <- renderPrint({
               cat("Stocks: ")
               cat(stocks$Symbol, sep=", ")
             })
+            setProgress(message = "Analyzing Timerseries Data", value = 2)
+            timeseries_analysis(output, stocks, stock_data)
+            setProgress(message = "Analyzing Financial Data", value = 3)
+            financial_analysis(output, stocks, stock_data)
           }
         }
       })
