@@ -1,5 +1,7 @@
 shinyServer(function(input, output, session){
   stocks <- NULL
+  
+  get_market_data()
 
   # Monitor "Clear Stocks" button presses
   observe({
@@ -13,7 +15,7 @@ shinyServer(function(input, output, session){
     output$symbols <- renderPrint({
       cat("Stocks: ")
     })
-    create_blank_timeseries_plot_output(output)
+    create_blank_output(output)
   })
 
   # Monitor "Add Stock" button presses
@@ -25,7 +27,7 @@ shinyServer(function(input, output, session){
       output$error <- renderText({
         NULL
       })
-      withProgress(session, min = 0, max = 2, {
+      withProgress(session, min = 0, max = 3, {
         if(length(stocks$Symbol) == 0 || !(input$symbol %in% stocks$Symbol)){
           symbol <- as.character(toupper(input$symbol))
           setProgress(message = "Getting data", value = 1)
@@ -41,8 +43,10 @@ shinyServer(function(input, output, session){
               cat("Stocks: ")
               cat(stocks$Symbol, sep=", ")
             })
-            setProgress(message = "Creating plots", value = 2)
-            create_timeseries_plot_output(input, output, session, stocks)
+            setProgress(message = "Analyzing Timerseries Data", value = 2)
+            timeseries_analysis(output, stocks)
+            setProgress(message = "Analyzing Financial Data", value = 3)
+            financial_analysis(output, stocks)
           }
         }
       })

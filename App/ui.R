@@ -17,7 +17,7 @@ shinyUI(fluidPage(
     tabsetPanel(
       tabPanel("Fundamental Analysis"),
       tabPanel("Timeseries Analysis", uiOutput("timeseries_plot.ui")),
-      tabPanel("Financial Analysis"),
+      tabPanel("Financial Analysis", plotOutput("combination_plot")),
       tabPanel("Help")
     )
   )
