@@ -4,6 +4,7 @@ library(Quandl)
 library(reshape2)
 library(shiny)
 library(shinyIncubator)
+library(TTR)
 
 source('HTMLR/input.R')
 source('R/data_retrieving.R')
