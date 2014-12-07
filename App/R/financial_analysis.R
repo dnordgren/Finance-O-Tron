@@ -1,5 +1,3 @@
-Quandl.auth("Xwpyys22sxHPzyXBrGdH")
-
 years <- 10
 start_date <- as.Date(ymd(Sys.Date()) - years(years))
 end_date <- Sys.Date()
@@ -28,7 +26,7 @@ get_market_data <- function(){
   erp <<- gspc_rate - tnx_rate
   
   # Get data into shorter form for comparison with individual stocks
-  gspc_data <- gspc_data[as.Date(gspc_data$Date) >= as.Date(ymd(Sys.Date()) - years(3)),]
+  gspc_data <- gspc_data[as.Date(gspc_data$Date) >= as.Date(ymd(Sys.Date()) - years(1)),]
   # Calculate the rates of return for gspc
   gspc_rates <<- diff(gspc_data$'Adjusted Close')/gspc_data$'Adjusted Close'[-length(gspc_data$'Adjusted Close')]
 }
@@ -53,7 +51,7 @@ calculate_standard_deviation <- function(weighted_rates)
   sd(single_rates) 
 }
 
-# When called from below, creates a matrix of all possible combinations of weights
+# Creates a matrix of all possible combinations of weights
 calculate_weights_matrix <- function(stock_number, sum)
 {
   if(stock_number == 1)
@@ -62,7 +60,7 @@ calculate_weights_matrix <- function(stock_number, sum)
   }
   else
   {
-    new_values <- seq(0,1-sum,.05)
+    new_values <- seq(0,1-sum,.01)
     previous <- lapply(new_values, function(thing){
       matrix_continued <- calculate_weights_matrix(stock_number-1, sum+thing)
       cbind(thing,matrix_continued)
@@ -71,9 +69,12 @@ calculate_weights_matrix <- function(stock_number, sum)
   }
 }
 
-calculate_returns <- function(prices, start_date, end_date){
+calculate_returns <- function(prices, dates){
+  print(prices)
+  print(head(dates, 1))
+  print(tail(dates, 1))
   # Determine frequency
-  years <- as.duration(ymd(end_date) - ymd(start_date)) /  as.duration(years(1))
+  years <- as.duration(ymd(tail(dates, 1)) - ymd(head(dates, 1))) /  as.duration(years(1))
   number_per_year <- round(length(prices)/years)
   # Calculate the rates of return for the symbol
   stock_ts <- ts(prices, freq=number_per_year, start=c(year(start_date), month(start_date)))
@@ -100,9 +101,9 @@ calculate_weighted_returns <- function(returns,weights)
   weights * returns
 }
 
-calculate_stock_returns <- function(stocks){
-  returns <- apply(stocks, 1, function(row){
-    returns <- calculate_returns(row$Prices, row$Start, row$End)
+calculate_stock_returns <- function(stock_data){
+  returns <- apply(stock_data[-1], 2, function(column){
+    returns <- calculate_returns(column, stock_data$Date)
   })
 }
 

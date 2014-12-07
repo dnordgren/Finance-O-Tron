@@ -11,8 +11,8 @@ timeseries_analysis <- function(output, stocks, stock_data){
   })
 }
 
-financial_analysis <- function(output, stocks){
-  returns <- calculate_stock_returns(stocks)
+financial_analysis <- function(output, stocks, stock_data){
+  returns <- calculate_stock_returns(stock_data)
   expected_returns <- calculate_expected_returns(returns)
   output$combination_plot <- renderPlot({
     create_combination_plot(length(stocks$Symbol), returns, expected_returns)
