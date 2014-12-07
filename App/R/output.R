@@ -1,4 +1,4 @@
-timeseries_analysis <- function(output, stocks){
+timeseries_analysis <- function(output, stocks, stock_data){
   if(length(stocks$Symbol) == 0){
     create_blank_output(output)
   }
@@ -7,7 +7,7 @@ timeseries_analysis <- function(output, stocks){
     plotOutput("timeseries_plot", height = paste0(200*length(stocks$Symbol), "px"))
   })
   output$timeseries_plot <- renderPlot({
-    create_timeseries_plot(stocks)
+    create_timeseries_plot(stocks, stock_data)
   })
 }
 
