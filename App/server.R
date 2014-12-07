@@ -1,5 +1,8 @@
 shinyServer(function(input, output, session){
   stocks <- NULL
+  stock_data <- NULL
+  start <- NULL
+  end <- NULL
   
   get_market_data()
 
@@ -12,6 +15,10 @@ shinyServer(function(input, output, session){
       NULL
     })
     stocks <<- NULL
+    stock_data <<- NULL
+    start <<- NULL
+    end <<- NULL
+    enableInputSmall(session)
     output$symbols <- renderPrint({
       cat("Stocks: ")
     })
@@ -28,6 +35,11 @@ shinyServer(function(input, output, session){
         NULL
       })
       withProgress(session, min = 0, max = 3, {
+        if (is.null(start) || is.null(end)){
+          start <<- as.character(input$range[1])
+          end <<- as.character(input$range[2])
+          disableInputSmall(session)
+        }
         if(length(stocks$Symbol) == 0 || !(input$symbol %in% stocks$Symbol)){
           symbol <- as.character(toupper(input$symbol))
           setProgress(message = "Getting data", value = 1)
