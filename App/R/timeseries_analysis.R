@@ -14,10 +14,10 @@ create_timeseries_plot <- function(stocks, stock_data){
   })
   stock_ts <- do.call("rbind", stock_ts)
 
-plot <- ggplot(stock_ts, aes(x=Date)) +
-          geom_line(aes(y=Prices)) +
-          geom_line(aes(y=MA1), color="red") +
-          geom_line(aes(y=MA2), color="blue") +
-          facet_wrap(~Symbol,nrow=length(stocks$Symbol), scales="free")
-plot
+  plot <- ggplot(stock_ts, aes(x=Date)) +
+            geom_line(aes(y=Prices)) +
+            geom_line(aes(y=MA1), color="red") +
+            geom_line(aes(y=MA2), color="blue") +
+            facet_wrap(~Symbol,nrow=length(stocks$Symbol), scales="free")
+  plot
 }
