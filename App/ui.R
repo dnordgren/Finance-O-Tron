@@ -7,11 +7,11 @@ shinyUI(fluidPage(
         }
       );
     '))),
-  
+
   progressInit(),
-  
+
   titlePanel("Finance-O-Tron"),
-  
+
   sidebarPanel(
     textInput("symbol", "Enter a stock symbol:"),
     numericInput("weight", "Enter the weight (see Help for details):", min = 0, value = 1),
@@ -19,7 +19,7 @@ shinyUI(fluidPage(
     actionButtonHalf("add_stock", "Add Stock"),
     actionButtonHalf("clear_stocks", "Clear Stocks")
   ),
-  
+
   mainPanel(
     textOutput("symbols"),
     textOutput("error"),
@@ -33,7 +33,7 @@ shinyUI(fluidPage(
                strong("Portfolio Standard Deviation:"),
                textOutput("standard_deviation")),
       tabPanel("Timeseries Analysis", uiOutput("timeseries_plot.ui")),
-      tabPanel("Fundamental Analysis"),
+      tabPanel("Modeling", uiOutput("model_plots.ui")),
       tabPanel("Financial Analysis", plotOutput("combination_plot")),
       tabPanel("Help")
     )
