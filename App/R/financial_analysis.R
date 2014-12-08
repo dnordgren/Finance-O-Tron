@@ -3,20 +3,19 @@ start_date <- as.Date(ymd(Sys.Date()) - years(years))
 end_date <- Sys.Date()
 
 erp <- NULL
-gspc_rates <- NULL
+gspc_data <- NULL
 tnx_rate <- NULL
 
 get_market_data <- function(){
   # US stock market (S&P 500) values
-  gspc_data <- Quandl("YAHOO/INDEX_GSPC", start_date=start_date, end_date=end_date)
+  gspc_data <<- Quandl("YAHOO/INDEX_GSPC", start_date=start_date, end_date=end_date)
   # Risk-free rate of return values
   tnx_data <- Quandl("YAHOO/INDEX_TNX", start_date=start_date, end_date=end_date)
   # Reverse the data to get the normal form
-  gspc_data <- gspc_data[nrow(gspc_data):1,]
+  gspc_data <<- gspc_data[nrow(gspc_data):1,]
   tnx_data <- tnx_data[nrow(tnx_data):1,]
-
   # Calculate the rates of return for gspc
-  gspc_rates <<- diff(gspc_data$'Adjusted Close')/gspc_data$'Adjusted Close'[-length(gspc_data$'Adjusted Close')]
+  gspc_rates <- get_gspc_rates(gspc_data$Date[1])
   # Find the Average rate for each, and then annualize it
   gspc_rate <- mean(gspc_rates)
   gspc_rate <- (1 + gspc_rate)^(length(gspc_rates)/years) - 1
@@ -24,11 +23,14 @@ get_market_data <- function(){
   tnx_rate <<- mean(tnx_data$'Adjusted Close'/100)
   # Calculate the equity risk premium
   erp <<- gspc_rate - tnx_rate
+}
 
-  # Get data into shorter form for comparison with individual stocks
-  gspc_data <- gspc_data[as.Date(gspc_data$Date) >= as.Date(ymd(Sys.Date()) - years(1)),]
-  # Calculate the rates of return for gspc
-  gspc_rates <<- diff(gspc_data$'Adjusted Close')/gspc_data$'Adjusted Close'[-length(gspc_data$'Adjusted Close')]
+get_gspc_rates <- function(start_date){
+  if(as.Date(start_date) < gspc_data$Date[1]){
+    return(NULL)
+  }
+  data <- gspc_data[as.Date(gspc_data$Date) >= as.Date(start_date),]
+  return(diff(data$'Adjusted Close')/data$'Adjusted Close'[-length(data$'Adjusted Close')])
 }
 
 # Returns the expected return and standard deviation for the specefied portfolio element weights
@@ -79,6 +81,11 @@ calculate_returns <- function(prices, dates){
   rates
 }
 
+calculate_weights <- function(weight_integers){
+  totalWeight <- sum(weight_integers)
+  return(weight_integers/totalWeight)
+}
+
 # Find the expected return for a portofilio based on individual expected_returns and corresponding weights
 calculate_expected_return <- function(expected_returns, weights)
 {
@@ -104,7 +111,7 @@ calculate_stock_returns <- function(stock_data){
   })
 }
 
-calculate_expected_returns <- function(returns){
+calculate_expected_returns <- function(returns, gspc_rates){
   # Calculate the expected return for each stock
   expected_returns <- apply(returns, 2, function(column)
   {

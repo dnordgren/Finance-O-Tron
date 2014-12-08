@@ -25,6 +25,13 @@ shinyUI(fluidPage(
     textOutput("error"),
     tags$head(tags$style("#error{color: red;}")),
     tabsetPanel(
+      tabPanel("Portfolio",
+               h3("Stocks:"),
+               tableOutput("stock_table"),
+               strong("Expected Portfolio Return:"),
+               textOutput("expected_return"),
+               strong("Portfolio Standard Deviation:"),
+               textOutput("standard_deviation")),
       tabPanel("Timeseries Analysis", uiOutput("timeseries_plot.ui")),
       tabPanel("Fundamental Analysis"),
       tabPanel("Financial Analysis", plotOutput("combination_plot")),
