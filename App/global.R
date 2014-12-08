@@ -1,3 +1,4 @@
+library(forecast)
 library(ggplot2)
 library(lubridate)
 library(Quandl)
@@ -9,6 +10,7 @@ library(TTR)
 source('HTMLR/input.R')
 source('R/data_retrieving.R')
 source('R/financial_analysis.R')
+source('R/modeling_analysis.R')
 source('R/timeseries_analysis.R')
 source('R/output.R')
 

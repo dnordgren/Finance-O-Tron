@@ -3,7 +3,7 @@ shinyServer(function(input, output, session){
   stock_data <- NULL
   start <- NULL
   end <- NULL
-  
+
   get_market_data()
 
   # Monitor "Clear Stocks" button presses
@@ -73,6 +73,7 @@ shinyServer(function(input, output, session){
             timeseries_analysis(output, stocks, stock_data)
             setProgress(message = "Analyzing Financial Data", value = 3)
             financial_analysis(output, stocks, stock_data)
+            modeling_analysis(output, stock_data)
           }
         }
       })
