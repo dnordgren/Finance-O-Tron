@@ -10,7 +10,7 @@ timeseries_analysis <- function(output, stocks, stock_data){
   })
 }
 
-financial_analysis <- function(output, stocks, stock_data){
+financial_analysis <- function(input, output, stocks, stock_data){
   weights <- calculate_weights(stocks$Weight)
   weights_formatted <- sapply(weights, function(weight){
     sprintf("%1.2f%%", 100*weight)
@@ -40,11 +40,19 @@ financial_analysis <- function(output, stocks, stock_data){
     colnames(table)[4] <- "Standard Deviation"
     table
   }, include.rownames=FALSE)
-  output$correlation_plot.ui <- renderUI({
-    plotOutput("correlation_plot", height = paste0(200*length(stocks$Symbol), "px"))
+  output$correlation_ui <- renderUI({
+    if(input$correlation == "Plot"){
+      plotOutput("correlation_plot", height = paste0(200*length(stocks$Symbol), "px"))
+    }
+    else{
+      tableOutput("correlation_table")
+    }
   })
   output$correlation_plot <- renderPlot({
-    create_correlation_plot(returns, length(stocks))
+    create_correlation_plot(returns, length(stocks$Symbol))
+  })
+  output$correlation_table <- renderTable({
+    create_correlation_table(returns, length(stocks$Symbol))
   })
   output$expected_return <- renderText({
     sprintf("%1.2f%%", 100*calculate_expected_return(expected_returns, weights))

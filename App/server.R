@@ -72,7 +72,7 @@ shinyServer(function(input, output, session){
             setProgress(message = "Analyzing Timerseries Data", value = 2)
             timeseries_analysis(output, stocks, stock_data)
             setProgress(message = "Analyzing Financial Data", value = 3)
-            financial_analysis(output, stocks, stock_data)
+            financial_analysis(input, output, stocks, stock_data)
             setProgress(message = "Modeling Data", value = 4)
             modeling_analysis(output, stock_data)
           }
@@ -127,7 +127,7 @@ shinyServer(function(input, output, session){
           setProgress(message = "Analyzing Timerseries Data", value = 1)
           timeseries_analysis(output, stocks, stock_data)
           setProgress(message = "Analyzing Financial Data", value = 2)
-          financial_analysis(output, stocks, stock_data)
+          financial_analysis(input, output, stocks, stock_data)
           setProgress(message = "Modeling Data", value = 3)
           modeling_analysis(output, stock_data)
         })

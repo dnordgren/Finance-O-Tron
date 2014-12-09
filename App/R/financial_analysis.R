@@ -52,16 +52,16 @@ calculate_standard_deviation <- function(weighted_rates){
 }
 
 # Creates a matrix of all possible combinations of weights
-calculate_weights_matrix <- function(stock_number, sum){
+calculate_weights_matrix <- function(stock_number, sum, step_size){
   if(stock_number == 1)
   {
     return(matrix(1-sum))
   }
   else
   {
-    new_values <- seq(0,1-sum,.01)
+    new_values <- seq(0,1-sum,step_size)
     previous <- lapply(new_values, function(thing){
-      matrix_continued <- calculate_weights_matrix(stock_number-1, sum+thing)
+      matrix_continued <- calculate_weights_matrix(stock_number-1, sum+thing, step_size)
       cbind(thing,matrix_continued)
     })
     do.call("rbind", previous)
@@ -121,8 +121,18 @@ calculate_beta <- function(returns, gspc_rates){
 }
 
 create_combination_plot <- function(num_stocks, returns, expected_returns){
+  step_size <- .5
+  if(num_stocks < 3){
+    step_size <- .01
+  }
+  else if(num_stocks < 5){
+    step_size <- .05
+  }
+  else if(num_stocks < 7){
+    step_size <- .1
+  }
   # Builds a data frame that contains all combinations of three weights for step size = .01
-  plot_weights <- calculate_weights_matrix(num_stocks, 0)
+  plot_weights <- calculate_weights_matrix(num_stocks, 0, step_size)
 
   # For each weight combination, calculate the mean return rate and standard deviation to plot
   points <- as.data.frame(t(apply(plot_weights,1,calculate_plot_point, returns, expected_returns)))
@@ -136,18 +146,14 @@ create_correlation_plot <- function(returns, num_stocks){
 
   # Need to adjust the data format to be able to plot it
   print_cor <- melt(cor_matrix)
-  return(NULL)
-  #plot <- ggplot(print_cor, aes(x=Var1, y=value)) +
-  #  geom_bar() +
-  #  facet_grid(~ Var | Var2)
-  #plot
+  plot <- ggplot(print_cor, aes(x=Var1, y=value)) +
+    geom_bar(stat="identity", width=.1) +
+    facet_wrap(~Var2, nrow=num_stocks, scales="free")
+  plot
+}
 
-  # Plot the correlation on a barchart using lattice
-  # return(barchart(value ~ Var1 | Var2,
-  #                data = print_cor,
-  #                layout=c(1, num_stocks),
-  #                main="Porfolio Correlations",
-  #                scales=list(x=list(rot=90))))
+create_correlation_table <- function(returns, num_stocks){
+  cor_matrix <- cor(returns)
 }
 
 calculate_weight_combination <- function(desired_rate, stock_names, returns, expected_returns){
