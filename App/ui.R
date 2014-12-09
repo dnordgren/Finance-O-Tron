@@ -48,17 +48,17 @@ shinyUI(fluidPage(
           here as you build your portfolio. Each stock's expected return and standard
           deviation will also be displayed. In addition, this analysis area allows
           the user to specify a desired rate of return for their portfolio. Finance-O-Tron
-          will determine what weight of each stock you would be required to invest
-          in to achieve this return rate. The standard deviation of your portfolio
+          will determine what percentage of your investment you should make in each
+          stock in order to achieve this return rate. The standard deviation of your portfolio
           will also be calculated."),
         tags$div(style="margin-bottom:15px;"),
         strong("Timeseries Analysis"),
         p("Each ticker symbol that you add will have its daily adjusted closing
           price history over the specified period plotted here. In addition, it
-          will have the 50- and 100- day moving average plotted."),
+          will have the 50- and 100-day moving average plotted."),
         tags$div(style="margin-bottom:15px;"),
         strong("Modeling"),
-        p("Using the Holt-Winters timeseries forecasting algorithms, Finance-O-Tron
+        p("Using Holt-Winters timeseries forecasting algorithms, Finance-O-Tron
           will forecast future adjusted closing prices for the stocks that you've
           entered."),
         tags$div(style="margin-bottom:15px;"),
