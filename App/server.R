@@ -11,7 +11,10 @@ shinyServer(function(input, output, session){
     if(input$clear_stocks == 0){
       return()
     }
-    output$error <- renderText({
+    output$symbol_error <- renderText({
+      NULL
+    })
+    output$input_warning <- renderText({
       NULL
     })
     stocks <<- NULL
@@ -19,9 +22,6 @@ shinyServer(function(input, output, session){
     start <<- NULL
     end <<- NULL
     enableInputSmall(session)
-    output$symbols <- renderPrint({
-      cat("Stocks: ")
-    })
     create_blank_output(output)
   })
 
@@ -31,7 +31,10 @@ shinyServer(function(input, output, session){
       return()
     }
     isolate({
-      output$error <- renderText({
+      output$symbol_error <- renderText({
+        NULL
+      })
+      output$input_warning <- renderText({
         NULL
       })
       withProgress(session, min = 0, max = 3, {
@@ -49,26 +52,31 @@ shinyServer(function(input, output, session){
           }
           stock_column <- get_stock_data(symbol, start, end, return_dates)
           if (is.null(stock_column)){
-            output$error <- renderPrint({
+            output$symbol_error <- renderPrint({
               cat(symbol, "is not a valid ticker symbol")
             })
           }
           else{
             if (is.null(stock_data)){
               stock_data <<- stock_column
+              if (stock_data$Date[1] != start){
+                start <<- stock_data$Date[1]
+                output$input_warning <- renderPrint({
+                  cat("Can only retrieve data for ", symbol, "from", as.character(start), "on. All data has been shortened accordingly.")
+                })
+              }
             }
             else{
               if(length(stock_column[,1]) < length(stock_data$Date)){
                 stock_data <<- tail(stock_data, length(stock_column[,1]))
                 start <<- stock_data$Date[1]
+                output$input_warning <- renderPrint({
+                  cat("Can only retrieve data for ", symbol, "from", as.character(start), "on. All data has been shortened accordingly.")
+                })
               }
               stock_data <<- cbind(stock_data, stock_column)
             }
             stocks <<- rbind(stocks, data.frame(Symbol=symbol, Weight=input$weight, stringsAsFactors=FALSE))
-            output$symbols <- renderPrint({
-              cat("Stocks: ")
-              cat(stocks$Symbol, sep=", ")
-            })
             setProgress(message = "Analyzing Timerseries Data", value = 2)
             timeseries_analysis(output, stocks, stock_data)
             setProgress(message = "Analyzing Financial Data", value = 3)
@@ -81,5 +89,17 @@ shinyServer(function(input, output, session){
 
     # Clear input text box on button press
     updateTextInput(session, "symbol", value = "")
+  })
+
+  # Monitor "Calculate Weights" button presses
+  observe({
+    if(input$calculate_weights == 0){
+      return()
+    }
+
+    isolate({
+      desired_rate <- input$desired_return
+      find_weights(output, desired_rate, stocks, stock_data)
+    })
   })
 })

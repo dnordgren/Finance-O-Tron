@@ -134,3 +134,34 @@ create_combination_plot <- function(num_stocks, returns, expected_returns){
   # Plot the points, putting standard deviation on the x-axis and mean rate of return on the y-axis
   qplot(points, x=points[,2], y=points[,1], xlab="Standard Deviation", ylab="Mean Rate of Return", main="Portfolio Combinations Plot")
 }
+
+create_correlation_plot <- function(returns, num_stocks){
+  cor_matrix <- cor(returns)
+
+  # Need to adjust the data format to be able to plot it
+  print_cor <- melt(cor_matrix)
+  return(NULL)
+  #plot <- ggplot(print_cor, aes(x=Var1, y=value)) +
+  #  geom_bar() +
+  #  facet_grid(~ Var | Var2)
+  #plot
+
+  # Plot the correlation on a barchart using lattice
+  # return(barchart(value ~ Var1 | Var2,
+  #                data = print_cor,
+  #                layout=c(1, num_stocks),
+  #                main="Porfolio Correlations",
+  #                scales=list(x=list(rot=90))))
+}
+
+calculate_weight_combination <- function(desired_rate, stock_names, returns, expected_returns){
+  # Variables needed to solve for weights
+  cov_matrix <- cov(returns)
+  risk <- rep(0,length(stock_names))
+  amat <- matrix(c(rep(1, nrow(cov_matrix)), unlist(expected_returns)), nrow=nrow(cov_matrix))
+  bvec <- c(1, desired_rate)
+  meq <- 2
+
+  # From quadprog package. Calculates the weights needed to reach a specified mean rate of return while minimizing standard deviation
+  calculated_weights <- solve.QP(cov_matrix, risk, amat, bvec, meq, factorized=FALSE)$solution
+}

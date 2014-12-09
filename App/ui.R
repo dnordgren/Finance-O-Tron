@@ -17,24 +17,36 @@ shinyUI(fluidPage(
     numericInput("weight", "Enter the weight (see Help for details):", min = 0, value = 1),
     dateRangeInput("range", "Date Range:", start = as.Date(ymd(Sys.Date()) - years(1)), end = as.Date(ymd(Sys.Date()))),
     actionButtonHalf("add_stock", "Add Stock"),
-    actionButtonHalf("clear_stocks", "Clear Stocks")
+    actionButtonHalf("clear_stocks", "Clear All Stocks"),
+    textOutput("input_warning")
   ),
 
   mainPanel(
-    textOutput("symbols"),
-    textOutput("error"),
-    tags$head(tags$style("#error{color: red;}")),
+    textOutput("symbol_error"),
+    tags$head(tags$style("#symbol_error{color: red;}")),
+    tags$head(tags$style("#timeseries_error{color: red;}")),
+    tags$head(tags$style("#portfolio_error{color: red;}")),
+    tags$head(tags$style("#financial_error{color: red;}")),
     tabsetPanel(
       tabPanel("Portfolio",
-               h3("Stocks:"),
+               textOutput("portfolio_error"),
+               h3("Stocks:", id="stocks"),
                tableOutput("stock_table"),
                strong("Expected Portfolio Return:"),
                textOutput("expected_return"),
                strong("Portfolio Standard Deviation:"),
-               textOutput("standard_deviation")),
-      tabPanel("Timeseries Analysis", uiOutput("timeseries_plot.ui")),
+               textOutput("standard_deviation"),
+               numericInput("desired_return", "Enter a desired return rate:", min=0, max = 1, value=.05),
+               actionButtonRow("calculate_weights", "Find Weights"),
+               tableOutput("weights_table")),
+      tabPanel("Timeseries Analysis",
+               textOutput("timeseries_error"),
+               uiOutput("timeseries_plot.ui")),
       tabPanel("Modeling", uiOutput("model_plots.ui")),
-      tabPanel("Financial Analysis", plotOutput("combination_plot")),
+      tabPanel("Financial Analysis",
+               textOutput("financial_error"),
+               uiOutput("correlation_plot.ui"),
+               plotOutput("combination_plot")),
       tabPanel("Help")
     )
   )
