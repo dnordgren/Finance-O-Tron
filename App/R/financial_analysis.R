@@ -34,8 +34,7 @@ get_gspc_rates <- function(start_date){
 }
 
 # Returns the expected return and standard deviation for the specefied portfolio element weights
-calculate_plot_point <- function(weights, returns, expected_returns)
-{
+calculate_plot_point <- function(weights, returns, expected_returns){
   expected_return <- calculate_expected_return(expected_returns, weights)
   # Create dataframe of stock rates adjusted by weights
   weighted_stock_rates <- as.data.frame(mapply(calculate_weighted_returns, returns, weights))
@@ -45,8 +44,7 @@ calculate_plot_point <- function(weights, returns, expected_returns)
 }
 
 # Find the standard deviation for a weighted collection of return rates for each item in a portfolio
-calculate_standard_deviation <- function(weighted_rates)
-{
+calculate_standard_deviation <- function(weighted_rates){
   # Sum each row for single return rates per period
   single_rates <- rowSums(weighted_rates)
   #Calculate the standard deviation
@@ -54,8 +52,7 @@ calculate_standard_deviation <- function(weighted_rates)
 }
 
 # Creates a matrix of all possible combinations of weights
-calculate_weights_matrix <- function(stock_number, sum)
-{
+calculate_weights_matrix <- function(stock_number, sum){
   if(stock_number == 1)
   {
     return(matrix(1-sum))
@@ -87,20 +84,17 @@ calculate_weights <- function(weight_integers){
 }
 
 # Find the expected return for a portofilio based on individual expected_returns and corresponding weights
-calculate_expected_return <- function(expected_returns, weights)
-{
+calculate_expected_return <- function(expected_returns, weights){
   sum(mapply(calculate_weighted_return, expected_returns,weights))
 }
 
 # Weights a single expected return
-calculate_weighted_return <- function(expected_return,weight)
-{
+calculate_weighted_return <- function(expected_return,weight){
   expected_return * weight
 }
 
 # Weights a full series of returns
-calculate_weighted_returns <- function(returns,weights)
-{
+calculate_weighted_returns <- function(returns,weights){
   # Multiply weight by each element in column
   weights * returns
 }
@@ -113,15 +107,17 @@ calculate_stock_returns <- function(stock_data){
 
 calculate_expected_returns <- function(returns, gspc_rates){
   # Calculate the expected return for each stock
-  expected_returns <- apply(returns, 2, function(column)
-  {
-    res <- lm(column~gspc_rates)
-    # Beta is the slope of the Linear model
-    beta <- res$coefficients[[2]]
+  expected_returns <- apply(returns, 2, function(column){
+    beta <- calculate_beta(column, gspc_rates)
     # Find the expected return using the formula from the CAPM model
     expected_return <- tnx_rate + beta*erp
     expected_return
   })
+}
+
+calculate_beta <- function(returns, gspc_rates){
+  res <- lm(returns~gspc_rates)
+  beta <- res$coefficients[[2]]
 }
 
 create_combination_plot <- function(num_stocks, returns, expected_returns){

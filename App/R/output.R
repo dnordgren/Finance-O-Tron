@@ -22,8 +22,23 @@ financial_analysis <- function(output, stocks, stock_data){
   expected_returns_formatted <- sapply(expected_returns, function(expected_return){
     sprintf("%1.2f%%", 100*expected_return)
   })
+  standard_deviations <- apply(returns, 2, function(column){
+    sd(column)
+  })
+  standard_deviations_formatted <- sapply(standard_deviations, function(standard_deviation){
+    sprintf("%1.3f", standard_deviation)
+  })
+  betas <- apply(returns, 2, function(column){
+    calculate_beta(column, gspc_rates)
+  })
   output$stock_table <- renderTable({
-    data.frame(Symbol=stocks$Symbol, Weight=weights_formatted, Return=expected_returns_formatted)
+    table <- data.frame(Symbol=stocks$Symbol,
+               Weight=weights_formatted,
+               Beta=betas,
+               StandardDeviaton=standard_deviations_formatted,
+               Return=expected_returns_formatted)
+    colnames(table)[4] <- "Standard Deviation"
+    table
   }, include.rownames=FALSE)
   output$correlation_plot.ui <- renderUI({
     plotOutput("correlation_plot", height = paste0(200*length(stocks$Symbol), "px"))
