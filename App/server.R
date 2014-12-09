@@ -11,18 +11,11 @@ shinyServer(function(input, output, session){
     if(input$clear_stocks == 0){
       return()
     }
-    output$symbol_error <- renderText({
-      NULL
-    })
-    output$input_warning <- renderText({
-      NULL
-    })
+    clear_output(output, session)
     stocks <<- NULL
     stock_data <<- NULL
     start <<- NULL
     end <<- NULL
-    enableInputSmall(session)
-    create_blank_output(output)
   })
 
   # Monitor "Add Stock" button presses
@@ -37,7 +30,7 @@ shinyServer(function(input, output, session){
       output$input_warning <- renderText({
         NULL
       })
-      withProgress(session, min = 0, max = 3, {
+      withProgress(session, min = 0, max = 4, {
         if (is.null(start) || is.null(end)){
           start <<- as.character(input$range[1])
           end <<- as.character(input$range[2])
@@ -61,9 +54,7 @@ shinyServer(function(input, output, session){
               stock_data <<- stock_column
               if (stock_data$Date[1] != start){
                 start <<- stock_data$Date[1]
-                output$input_warning <- renderPrint({
-                  cat("Can only retrieve data for ", symbol, "from", as.character(start), "on. All data has been shortened accordingly.")
-                })
+                render_input_warning(symbol, start)
               }
             }
             else{
@@ -77,16 +68,12 @@ shinyServer(function(input, output, session){
               stock_data <<- cbind(stock_data, stock_column)
             }
             stocks <<- rbind(stocks, data.frame(Symbol=symbol, Weight=input$weight, stringsAsFactors=FALSE))
-            output$remove_stock_symbols <- renderUI({
-              checkbox_list <- lapply(stocks$Symbol, function(symbol){
-                symbol
-              })
-              checkboxGroupInput("remove_symbols", label=NULL, choices=checkbox_list)
-            })
+            populate_remove_checkboxes(output, stocks)
             setProgress(message = "Analyzing Timerseries Data", value = 2)
             timeseries_analysis(output, stocks, stock_data)
             setProgress(message = "Analyzing Financial Data", value = 3)
             financial_analysis(output, stocks, stock_data)
+            setProgress(message = "Modeling Data", value = 4)
             modeling_analysis(output, stock_data)
           }
         }
@@ -123,29 +110,26 @@ shinyServer(function(input, output, session){
           remove_all <<- FALSE
         }
       })
-      print(remove_all)
       if(remove_all){
+        clear_output(output, session)
         stocks <<- NULL
         stock_data <<- NULL
+        start <<- NULL
+        end <<- NULL
       }
       else{
         stocks <<- stocks[!(stocks$Symbol %in% remove_list),]
         stock_data <<- stock_data[,!(names(stock_data) %in% remove_list)]
       }
+      populate_remove_checkboxes(output, stocks)
       if(!is.null(stocks)){
-        output$remove_stock_symbols <- renderUI({
-          checkbox_list <- lapply(stocks$Symbol, function(symbol){
-            symbol
-          })
-          checkboxGroupInput("remove_symbols", label=NULL, choices=checkbox_list)
-        })
-        timeseries_analysis(output, stocks, stock_data)
-        financial_analysis(output, stocks, stock_data)
-        modeling_analysis(output, stock_data)
-      }
-      else{
-        output$remove_stock_symbols <- renderUI({
-          NULL
+        withProgress(session, min = 0, max = 3, {
+          setProgress(message = "Analyzing Timerseries Data", value = 1)
+          timeseries_analysis(output, stocks, stock_data)
+          setProgress(message = "Analyzing Financial Data", value = 2)
+          financial_analysis(output, stocks, stock_data)
+          setProgress(message = "Modeling Data", value = 3)
+          modeling_analysis(output, stock_data)
         })
       }
     })

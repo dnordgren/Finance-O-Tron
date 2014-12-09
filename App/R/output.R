@@ -96,7 +96,7 @@ find_weights <- function(output, rate, stocks, stock_data){
   }, include.rownames=FALSE)
 }
 
-create_blank_output <- function(output){
+clear_output <- function(output, session){
   output$timeseries_plot.ui <- renderUI({
     plotOutput("timeseries_plot")
   })
@@ -105,5 +105,55 @@ create_blank_output <- function(output){
   })
   output$combination_plot <- renderPlot({
     NULL
+  })
+  output$stock_table <- renderTable({
+    NULL
+  })
+  output$expected_return <- renderText({
+    NULL
+  })
+  output$standard_deviation <- renderText({
+    NULL
+  })
+  output$correlation_plot.ui <- renderUI({
+    plotOutput("correlation_plot")
+  })
+  output$correlation_plot <- renderPlot({
+    NULL
+  })
+  output$weights_table <- renderPlot({
+    NULL
+  })
+  output$model_plots.ui <- renderUI({
+    NULL
+  })
+  output$symbol_error <- renderText({
+    NULL
+  })
+  output$input_warning <- renderText({
+    NULL
+  })
+  enableInputSmall(session)
+}
+
+populate_remove_checkboxes <- function(output, stocks){
+  if(!is.null(stocks)){
+    output$remove_stock_symbols <- renderUI({
+      checkbox_list <- lapply(stocks$Symbol, function(symbol){
+        symbol
+      })
+      checkboxGroupInput("remove_symbols", label=NULL, choices=checkbox_list)
+    })
+  }
+  else{
+    output$remove_stock_symbols <- renderUI({
+      NULL
+    })
+  }
+}
+
+render_input_warning <- function(symbol, start){
+  output$input_warning <- renderPrint({
+    cat("Can only retrieve data for ", symbol, "from", as.character(start), "on. All data has been shortened accordingly.")
   })
 }

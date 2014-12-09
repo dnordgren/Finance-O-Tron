@@ -88,6 +88,6 @@ shinyUI(fluidPage(
                p("All possible combinations of weights of the stocks that you've entered
                 are plotted for all possible returns.")
         )
-    )
+    ), width = 10
   )
 ))
