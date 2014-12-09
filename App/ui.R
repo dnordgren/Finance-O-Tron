@@ -15,7 +15,7 @@ shinyUI(fluidPage(
   sidebarPanel(
     textInput("symbol", "Enter a stock symbol:"),
     numericInput("weight", "Enter the weight (see Help for details):", min = 0, value = 1),
-    dateRangeInput("range", "Date Range:", start = as.Date(ymd(Sys.Date()) - years(1)), end = as.Date(ymd(Sys.Date()))),
+    dateRangeInput("range", "Date Range:", start = as.Date(ymd(Sys.Date()) - years(3)), end = as.Date(ymd(Sys.Date()))),
     actionButtonHalf("add_stock", "Add Stock"),
     actionButtonHalf("clear_stocks", "Clear Stocks")
   ),
