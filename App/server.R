@@ -77,6 +77,12 @@ shinyServer(function(input, output, session){
               stock_data <<- cbind(stock_data, stock_column)
             }
             stocks <<- rbind(stocks, data.frame(Symbol=symbol, Weight=input$weight, stringsAsFactors=FALSE))
+            output$remove_stock_symbols <- renderUI({
+              checkbox_list <- lapply(stocks$Symbol, function(symbol){
+                symbol
+              })
+              checkboxGroupInput("remove_symbols", label=NULL, choices=checkbox_list)
+            })
             setProgress(message = "Analyzing Timerseries Data", value = 2)
             timeseries_analysis(output, stocks, stock_data)
             setProgress(message = "Analyzing Financial Data", value = 3)
@@ -100,6 +106,48 @@ shinyServer(function(input, output, session){
     isolate({
       desired_rate <- input$desired_return
       find_weights(output, desired_rate, stocks, stock_data)
+    })
+  })
+
+  # Monitor "Remove Stocks" button presses
+  observe({
+    if(input$remove_stocks == 0){
+      return()
+    }
+
+    isolate({
+      remove_list <- input$remove_symbols
+      remove_all <- TRUE
+      lapply(stocks$Symbol, function(symbol){
+        if (!(symbol %in% remove_list)){
+          remove_all <<- FALSE
+        }
+      })
+      print(remove_all)
+      if(remove_all){
+        stocks <<- NULL
+        stock_data <<- NULL
+      }
+      else{
+        stocks <<- stocks[!(stocks$Symbol %in% remove_list),]
+        stock_data <<- stock_data[,!(names(stock_data) %in% remove_list)]
+      }
+      if(!is.null(stocks)){
+        output$remove_stock_symbols <- renderUI({
+          checkbox_list <- lapply(stocks$Symbol, function(symbol){
+            symbol
+          })
+          checkboxGroupInput("remove_symbols", label=NULL, choices=checkbox_list)
+        })
+        timeseries_analysis(output, stocks, stock_data)
+        financial_analysis(output, stocks, stock_data)
+        modeling_analysis(output, stock_data)
+      }
+      else{
+        output$remove_stock_symbols <- renderUI({
+          NULL
+        })
+      }
     })
   })
 })
