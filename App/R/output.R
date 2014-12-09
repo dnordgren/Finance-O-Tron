@@ -18,24 +18,24 @@ financial_analysis <- function(output, stocks, stock_data){
   })
 }
 
-modeling_analysis <- function(output, stock_data) {
-  plots <- analyze_timeseries(stock_data)
+modeling_analysis <- function(input, output, stock_data) {
+  forecasts <- analyze_timeseries(stock_data)
 
   i <- 1
-  lapply(plots, function(plot) {
-    my_i <- i
-    plotname <- paste0("plot", my_i)
-    output[[plotname]] <- renderPlot({
-      plot.forecast(plot)
-    })
-    i <<- i + 1
+  forecast_count <- 0
+  lapply(forecasts[[1]], function(forecast) {
+    if(!is.null(forecast)){
+      forecast_count <<- forecast_count + 1
+      plotname <- paste0("plot", i)
+      output[[plotname]] <- renderPlot({
+        plot.forecast(forecast)
+      })
+      i <<- i + 1
+    }
   })
 
   output$model_plots.ui <- renderUI({
-    if (is.null(plots)) {
-      return(NULL)
-    }
-    plot_output_list <- lapply(1:length(plots), function(i) {
+    plot_output_list <- lapply(1:forecast_count, function(i) {
       plotname <- paste0("plot", i)
       plotOutput(plotname, height=250)
    })
