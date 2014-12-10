@@ -23,9 +23,18 @@ shinyServer(function(input, output, session){
       cat("Stocks: ")
     })
     create_blank_output(output)
+    populate_modeling_choices(output, stocks)
 
     # Clear input text box on button press
     updateTextInput(session, "symbol", value = "")
+  })
+
+  # Monitor Forecasting Stock Selection
+  observe({
+    selected_stock <- input$stock_selection
+    if (!is.null(selected_stock)) {
+      modeling_analysis(selected_stock, output, stock_data)
+    }
   })
 
   # Monitor "Add Stock" button presses
@@ -77,7 +86,6 @@ shinyServer(function(input, output, session){
             timeseries_analysis(output, stocks, stock_data)
             setProgress(message = "Analyzing Financial Data", value = 3)
             #financial_analysis(output, stocks, stock_data)
-            modeling_analysis(input, output, stock_data)
           }
         }
       })
