@@ -82,4 +82,12 @@ shinyServer(function(input, output, session){
     # Clear input text box on button press
     updateTextInput(session, "symbol", value = "")
   })
+
+  # observe update_mas button presses
+  observe({
+    if(input$update_mas == 0){
+      return()
+    }
+    timeseries_analysis(input$ma1, input$ma2, output, stocks, stock_data)
+  })
 })

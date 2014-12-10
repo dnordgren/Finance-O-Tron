@@ -32,6 +32,8 @@ shinyUI(fluidPage(
         textInput("ma2",
           label=strong("Long Moving Average Period"),
           value="100"),
+        actionButtonRow("update_mas",
+          "Update Moving Averages"),
         uiOutput("timeseries_plot.ui")),
       tabPanel("Modeling", uiOutput("model_plots.ui")),
       tabPanel("Financial Analysis", plotOutput("combination_plot")),
