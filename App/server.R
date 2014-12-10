@@ -5,6 +5,7 @@ shinyServer(function(input, output, session){
   end <- NULL
   
   disableUIElement("remove_stocks", session)
+  disableUIElement("calculate_weights", session)
 
   get_market_data()
 
@@ -70,6 +71,12 @@ shinyServer(function(input, output, session){
               stock_data <<- cbind(stock_data, stock_column)
             }
             stocks <<- rbind(stocks, data.frame(Symbol=symbol, Weight=input$weight, stringsAsFactors=FALSE))
+            if(length(stocks$Symbol) > 1){
+              enableUIElement("calculate_weights", session)
+            }
+            else{
+              disableUIElement("calcualte_weights", session)
+            }
             populate_remove_checkboxes(output, stocks, session)
             setProgress(message = "Analyzing Timerseries Data", value = 2)
             timeseries_analysis(output, stocks, stock_data)
@@ -125,6 +132,12 @@ shinyServer(function(input, output, session){
       }
       populate_remove_checkboxes(output, stocks, session)
       if(!is.null(stocks)){
+        if(length(stocks$Symbol) > 1){
+          enableUIElement("calculate_weights", session)
+        }
+        else{
+          disableUIElement("calculate_weights", session)
+        }
         withProgress(session, min = 0, max = 3, {
           setProgress(message = "Analyzing Timerseries Data", value = 1)
           timeseries_analysis(output, stocks, stock_data)
@@ -133,6 +146,9 @@ shinyServer(function(input, output, session){
           setProgress(message = "Modeling Data", value = 3)
           modeling_analysis(output, stock_data)
         })
+      }
+      else{
+        disableUIElement("calculate_weights", session)
       }
     })
   })

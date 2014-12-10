@@ -102,6 +102,12 @@ find_weights <- function(output, rate, stocks, stock_data){
   output$weights_table <- renderTable({
     data.frame(Symbol=stocks$Symbol, Weight=calculated_weights_formatted)
   }, include.rownames=FALSE)
+  output$optimized_expected_return <- renderText({
+    sprintf("%1.2f%%", 100*calculation[1])
+  })
+  output$optimized_standard_deviation <- renderText({
+    sprintf("%1.3f", calculation[2])
+  })
 }
 
 clear_output <- function(output, session){
@@ -160,6 +166,7 @@ populate_remove_checkboxes <- function(output, stocks, session){
       NULL
     })
     disableUIElement("remove_stocks", session)
+    disableUIElement("calculate_weights", session)
   }
 }
 
