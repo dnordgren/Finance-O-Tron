@@ -23,6 +23,9 @@ shinyServer(function(input, output, session){
       cat("Stocks: ")
     })
     create_blank_output(output)
+
+    # Clear input text box on button press
+    updateTextInput(session, "symbol", value = "")
   })
 
   # Monitor "Add Stock" button presses
@@ -65,6 +68,7 @@ shinyServer(function(input, output, session){
               stock_data <<- cbind(stock_data, stock_column)
             }
             stocks <<- rbind(stocks, data.frame(Symbol=symbol, Weight=input$weight, stringsAsFactors=FALSE))
+            populate_modeling_choices(output, stocks)
             output$symbols <- renderPrint({
               cat("Stocks: ")
               cat(stocks$Symbol, sep=", ")

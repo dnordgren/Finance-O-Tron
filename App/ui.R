@@ -26,7 +26,9 @@ shinyUI(fluidPage(
     tags$head(tags$style("#error{color: red;}")),
     tabsetPanel(
       tabPanel("Timeseries Analysis", uiOutput("timeseries_plot.ui")),
-      tabPanel("Modeling", uiOutput("model_plots.ui")),
+      tabPanel("Modeling",
+        uiOutput("modeling_stock_symbols"),
+        uiOutput("model_plots.ui")),
       tabPanel("Financial Analysis", plotOutput("combination_plot")),
       tabPanel("Help",
         h3("Inputs"),

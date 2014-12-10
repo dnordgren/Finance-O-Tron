@@ -54,3 +54,20 @@ create_blank_output <- function(output){
     NULL
   })
 }
+
+populate_modeling_choices <- function(output, stocks) {
+  if (!is.null(stocks)) {
+    output$modeling_stock_symbols <- renderUI({
+      select_box_list <- lapply(stocks$Symbol, function(symbol) {
+        symbol
+      })
+      selectInput("stock_selection",
+          label=strong("Choose a stock to model"),
+          choices=select_box_list)
+    })
+  } else {
+    output$modeling_stock_symbols <- renderUI({
+      NULL
+    })
+  }
+}
