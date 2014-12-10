@@ -17,7 +17,7 @@ financial_analysis <- function(input, output, stocks, stock_data){
   })
   returns <- calculate_stock_returns(stock_data)
   weighted_returns <- calculate_weighted_returns(returns, weights)
-  gspc_rates <- get_gspc_rates(stock_data$Date[1])
+  gspc_rates <- get_gspc_rates(stock_data$Date[1], tail(stock_data$Date,1))
   expected_returns <- calculate_expected_returns(returns, gspc_rates)
   expected_returns_formatted <- sapply(expected_returns, function(expected_return){
     sprintf("%1.2f%%", 100*expected_return)
@@ -92,7 +92,7 @@ modeling_analysis <- function(output, stock_data) {
 
 find_weights <- function(output, rate, stocks, stock_data){
   returns <- calculate_stock_returns(stock_data)
-  gspc_rates <- get_gspc_rates(stock_data$Date[1])
+  gspc_rates <- get_gspc_rates(stock_data$Date[1], tail(stock_data$Date,1))
   expected_returns <- calculate_expected_returns(returns, gspc_rates)
   calculated_weights <- calculate_weight_combination(rate, stocks$Symbol, returns, expected_returns)
   calculated_weights_formatted <- sapply(calculated_weights, function(weight){
@@ -142,9 +142,10 @@ clear_output <- function(output, session){
     NULL
   })
   enableInputSmall(session)
+  populate_remove_checkboxes(output, NULL, session)
 }
 
-populate_remove_checkboxes <- function(output, stocks){
+populate_remove_checkboxes <- function(output, stocks, session){
   if(!is.null(stocks)){
     output$remove_stock_symbols <- renderUI({
       checkbox_list <- lapply(stocks$Symbol, function(symbol){
@@ -152,15 +153,17 @@ populate_remove_checkboxes <- function(output, stocks){
       })
       checkboxGroupInput("remove_symbols", label=NULL, choices=checkbox_list)
     })
+    enableUIElement("remove_stocks", session)
   }
   else{
     output$remove_stock_symbols <- renderUI({
       NULL
     })
+    disableUIElement("remove_stocks", session)
   }
 }
 
-render_input_warning <- function(symbol, start){
+render_input_warning <- function(output, symbol, start){
   output$input_warning <- renderPrint({
     cat("Can only retrieve data for ", symbol, "from", as.character(start), "on. All data has been shortened accordingly.")
   })

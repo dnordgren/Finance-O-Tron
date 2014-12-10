@@ -15,7 +15,7 @@ get_market_data <- function(){
   gspc_data <<- gspc_data[nrow(gspc_data):1,]
   tnx_data <- tnx_data[nrow(tnx_data):1,]
   # Calculate the rates of return for gspc
-  gspc_rates <- get_gspc_rates(gspc_data$Date[1])
+  gspc_rates <- get_gspc_rates(gspc_data$Date[1], tail(gspc_data$Date,1))
   # Find the Average rate for each, and then annualize it
   gspc_rate <- mean(gspc_rates)
   gspc_rate <- (1 + gspc_rate)^(length(gspc_rates)/years) - 1
@@ -25,11 +25,17 @@ get_market_data <- function(){
   erp <<- gspc_rate - tnx_rate
 }
 
-get_gspc_rates <- function(start_date){
-  if(as.Date(start_date) < gspc_data$Date[1]){
+get_gspc_rates <- function(start_date, end_date){
+  if(as.Date(end_date) < as.Date(start_date)){
     return(NULL)
   }
+  if(as.Date(start_date) < gspc_data$Date[1] || as.Date(end_date) < gspc_data$Date[1]){
+    gspc_data <<- Quandl("YAHOO/INDEX_GSPC", start_date=start_date, end_date=end_date)
+    gspc_data <<- gspc_data[nrow(gspc_data):1,]
+    return(diff(gspc_data$'Adjusted Close')/gspc_data$'Adjusted Close'[-length(gspc_data$'Adjusted Close')])
+  }
   data <- gspc_data[as.Date(gspc_data$Date) >= as.Date(start_date),]
+  data <- data[as.Date(data$Date) <= as.Date(end_date),]
   return(diff(data$'Adjusted Close')/data$'Adjusted Close'[-length(data$'Adjusted Close')])
 }
 

@@ -14,3 +14,11 @@ disableInputSmall <- function(session){
 enableInputSmall <- function(session){
   session$sendCustomMessage(type="jsCode", list(code= "$('.input-small').attr('disabled',false)"))
 }
+
+disableUIElement <- function(id, session){
+  session$sendCustomMessage(type="jsCode", list(code=paste0("$('#",id,"').attr('disabled',true)")))
+}
+
+enableUIElement <- function(id, session){
+  session$sendCustomMessage(type="jsCode", list(code=paste0("$('#",id,"').attr('disabled',false)")))
+}

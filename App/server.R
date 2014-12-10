@@ -3,6 +3,8 @@ shinyServer(function(input, output, session){
   stock_data <- NULL
   start <- NULL
   end <- NULL
+  
+  disableUIElement("remove_stocks", session)
 
   get_market_data()
 
@@ -54,7 +56,7 @@ shinyServer(function(input, output, session){
               stock_data <<- stock_column
               if (stock_data$Date[1] != start){
                 start <<- stock_data$Date[1]
-                render_input_warning(symbol, start)
+                render_input_warning(output, symbol, start)
               }
             }
             else{
@@ -68,7 +70,7 @@ shinyServer(function(input, output, session){
               stock_data <<- cbind(stock_data, stock_column)
             }
             stocks <<- rbind(stocks, data.frame(Symbol=symbol, Weight=input$weight, stringsAsFactors=FALSE))
-            populate_remove_checkboxes(output, stocks)
+            populate_remove_checkboxes(output, stocks, session)
             setProgress(message = "Analyzing Timerseries Data", value = 2)
             timeseries_analysis(output, stocks, stock_data)
             setProgress(message = "Analyzing Financial Data", value = 3)
@@ -121,7 +123,7 @@ shinyServer(function(input, output, session){
         stocks <<- stocks[!(stocks$Symbol %in% remove_list),]
         stock_data <<- stock_data[,!(names(stock_data) %in% remove_list)]
       }
-      populate_remove_checkboxes(output, stocks)
+      populate_remove_checkboxes(output, stocks, session)
       if(!is.null(stocks)){
         withProgress(session, min = 0, max = 3, {
           setProgress(message = "Analyzing Timerseries Data", value = 1)
