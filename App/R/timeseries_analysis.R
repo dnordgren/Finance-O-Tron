@@ -1,8 +1,15 @@
-# specify moving average trails
-ma_trail1 = 50
-ma_trail2 = 100
+create_timeseries_plot <- function(ma1, ma2, stocks, stock_data) {
+  # specify moving average trails
+  ma_trail1 <- as.numeric(ma1)
+  ma_trail2 <- as.numeric(ma2)
 
-create_timeseries_plot <- function(stocks, stock_data){
+  if (is.na(ma_trail1) || ma_trail1 < 0 || ma_trail2 > stock_data$Date) {
+    ma_trail1 <- length(stock_data$Date)
+  }
+  if (is.na(ma_trail2) || ma_trail2 < 0 || ma_trail2 > stock_data$Date) {
+    ma_trail2 <- length(stock_data$Date)
+  }
+
   stock_ts <- lapply(stocks$Symbol, function(symbol){
     sma_1 <- SMA(stock_data[,symbol], n=ma_trail1)
     sma_2 <- SMA(stock_data[,symbol], n=ma_trail2)
