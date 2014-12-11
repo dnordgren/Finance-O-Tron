@@ -19,7 +19,10 @@ financial_analysis <- function(output, stocks, stock_data){
 }
 
 modeling_analysis <- function(selected_stock, output, stock_data) {
-  forecasts <- analyze_timeseries(output, stock_data[,1], stock_data[,selected_stock])
+  forecasts <- analyze_timeseries(selected_stock,
+                                  output,
+                                  stock_data[,1],
+                                  stock_data[,selected_stock])
 }
 
 create_blank_output <- function(output){
