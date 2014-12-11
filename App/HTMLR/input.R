@@ -3,7 +3,7 @@ actionButtonHalf <- function(inputId, value){
 }
 
 actionButtonRow <- function(inputId, value){
-  div(tags$button(id = inputId, type="button", class = "btn btn-primary action-button shiny-bound-input", value))
+  div(tags$button(id = inputId, type="button", class = "btn btn-primary action-button shiny-bound-input", value))
 }
 
 disableInputSmall <- function(session){
@@ -12,4 +12,12 @@ disableInputSmall <- function(session){
 
 enableInputSmall <- function(session){
   session$sendCustomMessage(type="jsCode", list(code= "$('.input-small').attr('disabled',false)"))
+}
+
+disableUIElement <- function(id, session){
+  session$sendCustomMessage(type="jsCode", list(code=paste0("$('#",id,"').attr('disabled',true)")))
+}
+
+enableUIElement <- function(id, session){
+  session$sendCustomMessage(type="jsCode", list(code=paste0("$('#",id,"').attr('disabled',false)")))
 }

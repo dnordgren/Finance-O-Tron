@@ -3,6 +3,9 @@ shinyServer(function(input, output, session){
   stock_data <- NULL
   start <- NULL
   end <- NULL
+  
+  disableUIElement("remove_stocks", session)
+  disableUIElement("calculate_weights", session)
 
   get_market_data()
 
@@ -11,33 +14,11 @@ shinyServer(function(input, output, session){
     if(input$clear_stocks == 0){
       return()
     }
-    output$error <- renderText({
-      NULL
-    })
+    clear_output(output, stocks, session)
     stocks <<- NULL
     stock_data <<- NULL
     start <<- NULL
     end <<- NULL
-    enableInputSmall(session)
-    output$symbols <- renderPrint({
-      cat("Stocks: ")
-    })
-    create_blank_output(output)
-    populate_modeling_choices(output, stocks)
-
-    # clear any forecast plots
-    output$beta_gamma <- renderPlot({
-      NULL
-    })
-    output$beta <- renderPlot({
-      NULL
-    })
-    output$neither <- renderPlot({
-      NULL
-    })
-
-    # Clear input text box on button press
-    updateTextInput(session, "symbol", value = "")
   })
 
   # Monitor Forecasting Stock Selection
@@ -54,10 +35,13 @@ shinyServer(function(input, output, session){
       return()
     }
     isolate({
-      output$error <- renderText({
+      output$symbol_error <- renderText({
         NULL
       })
-      withProgress(session, min = 0, max = 3, {
+      output$input_warning <- renderText({
+        NULL
+      })
+      withProgress(session, min = 0, max = 4, {
         if (is.null(start) || is.null(end)){
           start <<- as.character(input$range[1])
           end <<- as.character(input$range[2])
@@ -72,31 +56,41 @@ shinyServer(function(input, output, session){
           }
           stock_column <- get_stock_data(symbol, start, end, return_dates)
           if (is.null(stock_column)){
-            output$error <- renderPrint({
+            output$symbol_error <- renderPrint({
               cat(symbol, "is not a valid ticker symbol")
             })
           }
           else{
             if (is.null(stock_data)){
               stock_data <<- stock_column
+              if (stock_data$Date[1] != start){
+                start <<- stock_data$Date[1]
+                render_input_warning(output, symbol, start)
+              }
             }
             else{
               if(length(stock_column[,1]) < length(stock_data$Date)){
                 stock_data <<- tail(stock_data, length(stock_column[,1]))
                 start <<- stock_data$Date[1]
+                output$input_warning <- renderPrint({
+                  cat("Can only retrieve data for ", symbol, "from", as.character(start), "on. All data has been shortened accordingly.")
+                })
               }
               stock_data <<- cbind(stock_data, stock_column)
             }
             stocks <<- rbind(stocks, data.frame(Symbol=symbol, Weight=input$weight, stringsAsFactors=FALSE))
+            if(length(stocks$Symbol) > 1){
+              enableUIElement("calculate_weights", session)
+            } else {
+              disableUIElement("calcualte_weights", session)
+            }
+            populate_remove_checkboxes(output, stocks, session)
             populate_modeling_choices(output, stocks)
-            output$symbols <- renderPrint({
-              cat("Stocks: ")
-              cat(stocks$Symbol, sep=", ")
-            })
             setProgress(message = "Analyzing Timerseries Data", value = 2)
             timeseries_analysis(input$ma1, input$ma2, output, stocks, stock_data)
             setProgress(message = "Analyzing Financial Data", value = 3)
-            financial_analysis(output, stocks, stock_data)
+            financial_analysis(input, output, stocks, stock_data)
+            setProgress(message = "Modeling Data", value = 4)
           }
         }
       })
@@ -104,6 +98,66 @@ shinyServer(function(input, output, session){
 
     # Clear input text box on button press
     updateTextInput(session, "symbol", value = "")
+  })
+
+  # Monitor "Calculate Weights" button presses
+  observe({
+    if(input$calculate_weights == 0){
+      return()
+    }
+
+    isolate({
+      desired_rate <- input$desired_return
+      find_weights(output, desired_rate, stocks, stock_data)
+    })
+  })
+
+  # Monitor "Remove Stocks" button presses
+  observe({
+    if(input$remove_stocks == 0){
+      return()
+    }
+
+    isolate({
+      remove_list <- input$remove_symbols
+      remove_all <- TRUE
+      lapply(stocks$Symbol, function(symbol){
+        if (!(symbol %in% remove_list)){
+          remove_all <<- FALSE
+        }
+      })
+      if(remove_all){
+        clear_output(output, stocks, session)
+        stocks <<- NULL
+        stock_data <<- NULL
+        start <<- NULL
+        end <<- NULL
+      }
+      else{
+        stocks <<- stocks[!(stocks$Symbol %in% remove_list),]
+        stock_data <<- stock_data[,!(names(stock_data) %in% remove_list)]
+      }
+      populate_remove_checkboxes(output, stocks, session)
+      populate_modeling_choices(output, stocks)
+      if(!is.null(stocks)){
+        if(length(stocks$Symbol) > 1){
+          enableUIElement("calculate_weights", session)
+        }
+        else{
+          disableUIElement("calculate_weights", session)
+        }
+        withProgress(session, min = 0, max = 3, {
+          setProgress(message = "Analyzing Timerseries Data", value = 1)
+          timeseries_analysis(input$ma1, input$ma2, output, stocks, stock_data)
+          setProgress(message = "Analyzing Financial Data", value = 2)
+          financial_analysis(input, output, stocks, stock_data)
+          setProgress(message = "Modeling Data", value = 3)
+        })
+      }
+      else{
+        disableUIElement("calculate_weights", session)
+      }
+    })
   })
 
   # observe update_mas button presses

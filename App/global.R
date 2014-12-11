@@ -1,6 +1,8 @@
 library(forecast)
 library(ggplot2)
+library(lattice)
 library(lubridate)
+library(quadprog)
 library(Quandl)
 library(reshape2)
 library(shiny)
