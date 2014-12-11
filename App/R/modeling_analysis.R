@@ -63,6 +63,15 @@ analyze_timeseries <- function(selected_stock, output, date, selected_symbol_dat
         NULL
       })
     }
+    if (!(matching_models[1] && matching_models[2] && matching_models[3])) {
+      output$forecast_error <- renderText({
+        "No well-fitting forecasts were found."
+      })
+    } else {
+      output$forecast_error <- renderText({
+        NULL
+      })
+    }
   }, error = function(e) {
     output$beta_gamma <- renderPlot({
       NULL

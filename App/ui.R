@@ -29,6 +29,7 @@ shinyUI(fluidPage(
         uiOutput("timeseries_plot.ui")),
       tabPanel("Modeling",
         uiOutput("modeling_stock_symbols"),
+        textOutput("forecast_error"),
         plotOutput("beta_gamma"),
         plotOutput("beta"),
         plotOutput("neither")),
