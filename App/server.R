@@ -25,6 +25,17 @@ shinyServer(function(input, output, session){
     create_blank_output(output)
     populate_modeling_choices(output, stocks)
 
+    # clear any forecast plots
+    output$beta_gamma <- renderPlot({
+      NULL
+    })
+    output$beta <- renderPlot({
+      NULL
+    })
+    output$neither <- renderPlot({
+      NULL
+    })
+
     # Clear input text box on button press
     updateTextInput(session, "symbol", value = "")
   })
