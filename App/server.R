@@ -94,7 +94,7 @@ shinyServer(function(input, output, session){
               cat(stocks$Symbol, sep=", ")
             })
             setProgress(message = "Analyzing Timerseries Data", value = 2)
-            timeseries_analysis(output, stocks, stock_data)
+            timeseries_analysis(input$ma1, input$ma2, output, stocks, stock_data)
             setProgress(message = "Analyzing Financial Data", value = 3)
             #financial_analysis(output, stocks, stock_data)
           }
@@ -104,5 +104,13 @@ shinyServer(function(input, output, session){
 
     # Clear input text box on button press
     updateTextInput(session, "symbol", value = "")
+  })
+
+  # observe update_mas button presses
+  observe({
+    if(input$update_mas == 0){
+      return()
+    }
+    timeseries_analysis(input$ma1, input$ma2, output, stocks, stock_data)
   })
 })
