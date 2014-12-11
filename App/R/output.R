@@ -16,6 +16,7 @@ financial_analysis <- function(input, output, stocks, stock_data){
     sprintf("%1.2f%%", 100*weight)
   })
   returns <- calculate_stock_returns(stock_data)
+  frequency <- calculate_data_frequency(stock_data$Date[1], tail(stock_data$Date, 1), length(stock_data[,1]))
   weighted_returns <- calculate_weighted_returns(returns, weights)
   gspc_rates <- get_gspc_rates(stock_data$Date[1], tail(stock_data$Date,1))
   expected_returns <- calculate_expected_returns(returns, gspc_rates)
@@ -23,10 +24,10 @@ financial_analysis <- function(input, output, stocks, stock_data){
     sprintf("%1.2f%%", 100*expected_return)
   })
   standard_deviations <- apply(returns, 2, function(column){
-    sd(column)
+    sd(column)*sqrt(frequency)
   })
   standard_deviations_formatted <- sapply(standard_deviations, function(standard_deviation){
-    sprintf("%1.3f", standard_deviation)
+    sprintf("%1.2f%%", 100*standard_deviation)
   })
   betas <- apply(returns, 2, function(column){
     calculate_beta(column, gspc_rates)
@@ -58,10 +59,10 @@ financial_analysis <- function(input, output, stocks, stock_data){
     sprintf("%1.2f%%", 100*calculate_expected_return(expected_returns, weights))
   })
   output$standard_deviation <- renderText({
-    sprintf("%1.3f", calculate_standard_deviation(weighted_returns))
+    sprintf("%1.2f%%", 100*calculate_standard_deviation(weighted_returns, frequency))
   })
   output$combination_plot <- renderPlot({
-    create_combination_plot(length(stocks$Symbol), returns, expected_returns)
+    create_combination_plot(length(stocks$Symbol), returns, expected_returns, frequency)
   })
 }
 
@@ -91,14 +92,16 @@ modeling_analysis <- function(output, stock_data) {
 }
 
 find_weights <- function(output, rate, stocks, stock_data){
+  frequency <- calculate_data_frequency(stock_data$Date[1], tail(stock_data$Date, 1), length(stock_data[,1]))
   returns <- calculate_stock_returns(stock_data)
   gspc_rates <- get_gspc_rates(stock_data$Date[1], tail(stock_data$Date,1))
   expected_returns <- calculate_expected_returns(returns, gspc_rates)
   calculated_weights <- calculate_weight_combination(rate, stocks$Symbol, returns, expected_returns)
+  weighted_returns <- calculate_weighted_returns(returns, calculated_weights)
   calculated_weights_formatted <- sapply(calculated_weights, function(weight){
     sprintf("%1.2f%%", 100*weight)
   })
-  calculation <- calculate_plot_point(calculated_weights, returns, expected_returns)
+  calculation <- calculate_plot_point(weighted_returns, calculated_weights, expected_returns, frequency)
   output$weights_table <- renderTable({
     data.frame(Symbol=stocks$Symbol, Weight=calculated_weights_formatted)
   }, include.rownames=FALSE)
@@ -106,7 +109,7 @@ find_weights <- function(output, rate, stocks, stock_data){
     sprintf("%1.2f%%", 100*calculation[1])
   })
   output$optimized_standard_deviation <- renderText({
-    sprintf("%1.3f", calculation[2])
+    sprintf("%1.2f%%", 100*calculation[2])
   })
 }
 

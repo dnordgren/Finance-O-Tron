@@ -40,21 +40,19 @@ get_gspc_rates <- function(start_date, end_date){
 }
 
 # Returns the expected return and standard deviation for the specefied portfolio element weights
-calculate_plot_point <- function(weights, returns, expected_returns){
+calculate_plot_point <- function(weighted_returns, weights, expected_returns, frequency){
   expected_return <- calculate_expected_return(expected_returns, weights)
-  # Create dataframe of stock rates adjusted by weights
-  weighted_stock_rates <- as.data.frame(mapply(calculate_weighted_returns, returns, weights))
   # Calculate the standard deviation
-  standard_deviation <- calculate_standard_deviation(weighted_stock_rates)
+  standard_deviation <- calculate_standard_deviation(weighted_returns, frequency)
   c(expected_return, standard_deviation)
 }
 
 # Find the standard deviation for a weighted collection of return rates for each item in a portfolio
-calculate_standard_deviation <- function(weighted_rates){
+calculate_standard_deviation <- function(weighted_rates, frequency){
   # Sum each row for single return rates per period
   single_rates <- rowSums(weighted_rates)
   #Calculate the standard deviation
-  sd(single_rates)
+  sd(single_rates) * sqrt(frequency)
 }
 
 # Creates a matrix of all possible combinations of weights
@@ -75,9 +73,7 @@ calculate_weights_matrix <- function(stock_number, sum, step_size){
 }
 
 calculate_returns <- function(prices, dates){
-  # Determine frequency
-  years <- as.duration(ymd(tail(dates, 1)) - ymd(head(dates, 1))) /  as.duration(years(1))
-  number_per_year <- round(length(prices)/years)
+  number_per_year <- calculate_data_frequency(head(dates, 1), tail(dates, 1), length(prices))
   # Calculate the rates of return for the symbol
   stock_ts <- ts(prices, freq=number_per_year, start=c(year(start_date), month(start_date)))
   rates <- diff(prices)/prices[-length(prices)]
@@ -126,7 +122,12 @@ calculate_beta <- function(returns, gspc_rates){
   beta <- res$coefficients[[2]]
 }
 
-create_combination_plot <- function(num_stocks, returns, expected_returns){
+calculate_data_frequency <- function(start, end, data_length){
+  years <- as.duration(ymd(end) - ymd(start)) /  as.duration(years(1))
+  number_per_year <- round(data_length/years)
+}
+
+create_combination_plot <- function(num_stocks, returns, expected_returns, frequency){
   step_size <- .5
   if(num_stocks < 3){
     step_size <- .01
@@ -141,7 +142,10 @@ create_combination_plot <- function(num_stocks, returns, expected_returns){
   plot_weights <- calculate_weights_matrix(num_stocks, 0, step_size)
 
   # For each weight combination, calculate the mean return rate and standard deviation to plot
-  points <- as.data.frame(t(apply(plot_weights,1,calculate_plot_point, returns, expected_returns)))
+  points <- as.data.frame(t(apply(plot_weights,1,function(weight_combination){
+    weighted_returns <- calculate_weighted_returns(returns, weight_combination)
+    calculate_plot_point(weighted_returns, weight_combination, expected_returns, frequency)
+  })))
 
   # Plot the points, putting standard deviation on the x-axis and mean rate of return on the y-axis
   qplot(points, x=points[,2], y=points[,1], xlab="Standard Deviation", ylab="Mean Rate of Return", main="Portfolio Combinations Plot")
@@ -153,7 +157,7 @@ create_correlation_plot <- function(returns, num_stocks){
   # Need to adjust the data format to be able to plot it
   print_cor <- melt(cor_matrix)
   plot <- ggplot(print_cor, aes(x=Var1, y=value)) +
-    geom_bar(stat="identity", width=.1) +
+    geom_bar(stat="identity", width=.5) +
     facet_wrap(~Var2, nrow=num_stocks, scales="free")
   plot
 }
