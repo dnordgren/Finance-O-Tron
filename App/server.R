@@ -23,6 +23,29 @@ shinyServer(function(input, output, session){
       cat("Stocks: ")
     })
     create_blank_output(output)
+    populate_modeling_choices(output, stocks)
+
+    # clear any forecast plots
+    output$beta_gamma <- renderPlot({
+      NULL
+    })
+    output$beta <- renderPlot({
+      NULL
+    })
+    output$neither <- renderPlot({
+      NULL
+    })
+
+    # Clear input text box on button press
+    updateTextInput(session, "symbol", value = "")
+  })
+
+  # Monitor Forecasting Stock Selection
+  observe({
+    selected_stock <- input$stock_selection
+    if (!is.null(selected_stock)) {
+      modeling_analysis(selected_stock, output, stock_data)
+    }
   })
 
   # Monitor "Add Stock" button presses
@@ -65,6 +88,7 @@ shinyServer(function(input, output, session){
               stock_data <<- cbind(stock_data, stock_column)
             }
             stocks <<- rbind(stocks, data.frame(Symbol=symbol, Weight=input$weight, stringsAsFactors=FALSE))
+            populate_modeling_choices(output, stocks)
             output$symbols <- renderPrint({
               cat("Stocks: ")
               cat(stocks$Symbol, sep=", ")
@@ -72,8 +96,7 @@ shinyServer(function(input, output, session){
             setProgress(message = "Analyzing Timerseries Data", value = 2)
             timeseries_analysis(input$ma1, input$ma2, output, stocks, stock_data)
             setProgress(message = "Analyzing Financial Data", value = 3)
-            #financial_analysis(output, stocks, stock_data)
-            modeling_analysis(output, stock_data)
+            financial_analysis(output, stocks, stock_data)
           }
         }
       })

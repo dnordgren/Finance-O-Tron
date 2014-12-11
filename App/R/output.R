@@ -18,29 +18,11 @@ financial_analysis <- function(output, stocks, stock_data){
   })
 }
 
-modeling_analysis <- function(output, stock_data) {
-  plots <- analyze_timeseries(stock_data)
-
-  i <- 1
-  lapply(plots, function(plot) {
-    my_i <- i
-    plotname <- paste0("plot", my_i)
-    output[[plotname]] <- renderPlot({
-      plot.forecast(plot)
-    })
-    i <<- i + 1
-  })
-
-  output$model_plots.ui <- renderUI({
-    if (is.null(plots)) {
-      return(NULL)
-    }
-    plot_output_list <- lapply(1:length(plots), function(i) {
-      plotname <- paste0("plot", i)
-      plotOutput(plotname, height=250)
-   })
-   do.call(tagList, plot_output_list)
-  })
+modeling_analysis <- function(selected_stock, output, stock_data) {
+  forecasts <- analyze_timeseries(selected_stock,
+                                  output,
+                                  stock_data[,1],
+                                  stock_data[,selected_stock])
 }
 
 create_blank_output <- function(output){
@@ -53,4 +35,21 @@ create_blank_output <- function(output){
   output$combination_plot <- renderPlot({
     NULL
   })
+}
+
+populate_modeling_choices <- function(output, stocks) {
+  if (!is.null(stocks)) {
+    output$modeling_stock_symbols <- renderUI({
+      select_box_list <- lapply(stocks$Symbol, function(symbol) {
+        symbol
+      })
+      selectInput("stock_selection",
+          label=strong("Choose a stock to model"),
+          choices=select_box_list)
+    })
+  } else {
+    output$modeling_stock_symbols <- renderUI({
+      NULL
+    })
+  }
 }
