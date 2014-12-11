@@ -1,4 +1,4 @@
-timeseries_analysis <- function(output, stocks, stock_data){
+timeseries_analysis <- function(ma1, ma2, output, stocks, stock_data){
   if(length(stocks$Symbol) == 0){
     create_blank_output(output)
   }
@@ -6,7 +6,7 @@ timeseries_analysis <- function(output, stocks, stock_data){
     plotOutput("timeseries_plot", height = paste0(200*length(stocks$Symbol), "px"))
   })
   output$timeseries_plot <- renderPlot({
-    create_timeseries_plot(stocks, stock_data)
+    create_timeseries_plot(ma1, ma2, stocks, stock_data)
   })
 }
 
@@ -66,29 +66,11 @@ financial_analysis <- function(input, output, stocks, stock_data){
   })
 }
 
-modeling_analysis <- function(output, stock_data) {
-  plots <- analyze_timeseries(stock_data)
-
-  i <- 1
-  lapply(plots, function(plot) {
-    my_i <- i
-    plotname <- paste0("plot", my_i)
-    output[[plotname]] <- renderPlot({
-      plot.forecast(plot)
-    })
-    i <<- i + 1
-  })
-
-  output$model_plots.ui <- renderUI({
-    if (is.null(plots)) {
-      return(NULL)
-    }
-    plot_output_list <- lapply(1:length(plots), function(i) {
-      plotname <- paste0("plot", i)
-      plotOutput(plotname, height=250)
-   })
-   do.call(tagList, plot_output_list)
-  })
+modeling_analysis <- function(selected_stock, output, stock_data) {
+  forecasts <- analyze_timeseries(selected_stock,
+                                  output,
+                                  stock_data[,1],
+                                  stock_data[,selected_stock])
 }
 
 find_weights <- function(output, rate, stocks, stock_data){
@@ -113,7 +95,7 @@ find_weights <- function(output, rate, stocks, stock_data){
   })
 }
 
-clear_output <- function(output, session){
+clear_output <- function(output, stocks, session){
   output$timeseries_plot.ui <- renderUI({
     plotOutput("timeseries_plot")
   })
@@ -132,10 +114,13 @@ clear_output <- function(output, session){
   output$standard_deviation <- renderText({
     NULL
   })
-  output$correlation_plot.ui <- renderUI({
-    plotOutput("correlation_plot")
+  output$correlation_ui <- renderUI({
+    NULL
   })
   output$correlation_plot <- renderPlot({
+    NULL
+  })
+  output$correlation_table <- renderTable({
     NULL
   })
   output$weights_table <- renderPlot({
@@ -152,6 +137,35 @@ clear_output <- function(output, session){
   })
   enableInputSmall(session)
   populate_remove_checkboxes(output, NULL, session)
+  populate_modeling_choices(output, stocks)
+  # clear any forecast plots
+  output$beta_gamma <- renderPlot({
+    NULL
+  })
+  output$beta <- renderPlot({
+    NULL
+  })
+  output$neither <- renderPlot({
+    NULL
+  })
+  output$modeling_stock_symbols <- renderUI({
+    NULL
+  })
+  output$neither <- renderPlot({
+    NULL
+  })
+  output$beta <- renderPlot({
+    NULL
+  })
+  output$beta_gamma <- renderPlot({
+    NULL
+  })
+  output$forecast_error <- renderText({
+    NULL
+  })
+  
+  # Clear input text box on button press
+  updateTextInput(session, "symbol", value = "")
 }
 
 populate_remove_checkboxes <- function(output, stocks, session){
@@ -177,4 +191,21 @@ render_input_warning <- function(output, symbol, start){
   output$input_warning <- renderPrint({
     cat("Can only retrieve data for ", symbol, "from", as.character(start), "on. All data has been shortened accordingly.")
   })
+}
+
+populate_modeling_choices <- function(output, stocks) {
+  if (!is.null(stocks)) {
+    output$modeling_stock_symbols <- renderUI({
+      select_box_list <- lapply(stocks$Symbol, function(symbol) {
+        symbol
+      })
+      selectInput("stock_selection",
+          label=strong("Choose a stock to model"),
+          choices=select_box_list)
+    })
+  } else {
+    output$modeling_stock_symbols <- renderUI({
+      NULL
+    })
+  }
 }

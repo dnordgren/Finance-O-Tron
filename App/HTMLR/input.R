@@ -3,8 +3,7 @@ actionButtonHalf <- function(inputId, value){
 }
 
 actionButtonRow <- function(inputId, value){
-  div(
-    tags$button(id = inputId, type="button", class = "btn btn-primary action-button shiny-bound-input", value))
+  div(tags$button(id = inputId, type="button", class = "btn btn-primary action-button shiny-bound-input", value))
 }
 
 disableInputSmall <- function(session){

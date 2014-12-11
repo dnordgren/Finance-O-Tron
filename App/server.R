@@ -14,11 +14,19 @@ shinyServer(function(input, output, session){
     if(input$clear_stocks == 0){
       return()
     }
-    clear_output(output, session)
+    clear_output(output, stocks, session)
     stocks <<- NULL
     stock_data <<- NULL
     start <<- NULL
     end <<- NULL
+  })
+
+  # Monitor Forecasting Stock Selection
+  observe({
+    selected_stock <- input$stock_selection
+    if (!is.null(selected_stock)) {
+      modeling_analysis(selected_stock, output, stock_data)
+    }
   })
 
   # Monitor "Add Stock" button presses
@@ -73,17 +81,16 @@ shinyServer(function(input, output, session){
             stocks <<- rbind(stocks, data.frame(Symbol=symbol, Weight=input$weight, stringsAsFactors=FALSE))
             if(length(stocks$Symbol) > 1){
               enableUIElement("calculate_weights", session)
-            }
-            else{
+            } else {
               disableUIElement("calcualte_weights", session)
             }
             populate_remove_checkboxes(output, stocks, session)
+            populate_modeling_choices(output, stocks)
             setProgress(message = "Analyzing Timerseries Data", value = 2)
-            timeseries_analysis(output, stocks, stock_data)
+            timeseries_analysis(input$ma1, input$ma2, output, stocks, stock_data)
             setProgress(message = "Analyzing Financial Data", value = 3)
             financial_analysis(input, output, stocks, stock_data)
             setProgress(message = "Modeling Data", value = 4)
-            modeling_analysis(output, stock_data)
           }
         }
       })
@@ -120,7 +127,7 @@ shinyServer(function(input, output, session){
         }
       })
       if(remove_all){
-        clear_output(output, session)
+        clear_output(output, stocks, session)
         stocks <<- NULL
         stock_data <<- NULL
         start <<- NULL
@@ -131,6 +138,7 @@ shinyServer(function(input, output, session){
         stock_data <<- stock_data[,!(names(stock_data) %in% remove_list)]
       }
       populate_remove_checkboxes(output, stocks, session)
+      populate_modeling_choices(output, stocks)
       if(!is.null(stocks)){
         if(length(stocks$Symbol) > 1){
           enableUIElement("calculate_weights", session)
@@ -140,16 +148,23 @@ shinyServer(function(input, output, session){
         }
         withProgress(session, min = 0, max = 3, {
           setProgress(message = "Analyzing Timerseries Data", value = 1)
-          timeseries_analysis(output, stocks, stock_data)
+          timeseries_analysis(input$ma1, input$ma2, output, stocks, stock_data)
           setProgress(message = "Analyzing Financial Data", value = 2)
           financial_analysis(input, output, stocks, stock_data)
           setProgress(message = "Modeling Data", value = 3)
-          modeling_analysis(output, stock_data)
         })
       }
       else{
         disableUIElement("calculate_weights", session)
       }
     })
+  })
+
+  # observe update_mas button presses
+  observe({
+    if(input$update_mas == 0){
+      return()
+    }
+    timeseries_analysis(input$ma1, input$ma2, output, stocks, stock_data)
   })
 })
